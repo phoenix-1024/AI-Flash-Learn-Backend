@@ -15,6 +15,12 @@ def enable_foreign_keys(dbapi_connection, connection_record):
 # Create a base class for our ORM models
 Base = declarative_base()
 
+class Document(Base):
+    __tablename__ = "documents"
+    doc_id = Column(Integer, primary_key=True)
+    doc_name = Column(String)
+    status = Column(String)
+
 # Define a model class
 class Question(Base):
     __tablename__ = "questions"
@@ -26,11 +32,7 @@ class Question(Base):
     answer = Column(String)
     para = Column(String)
 
-class Document(Base):
-    __tablename__ = "documents"
-    doc_id = Column(Integer, primary_key=True)
-    doc_name = Column(String)
-    status = Column(String)
+
 
 
 Base.metadata.create_all(engine)

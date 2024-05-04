@@ -11,7 +11,7 @@ class llama_model:
     )
     
     general_config = {
-        "model_name": "meta-llama/llama-3-70b-instruct"
+        "model": "meta-llama/llama-3-70b-instruct",
         "temperature": 0,
     }
     def __init__(self) -> None:

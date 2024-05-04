@@ -5,6 +5,7 @@ import re
 from custom.model import model
 import zipfile
 import asyncio
+import json
 
 def read_docx(file_bytes):
     doc = docx.Document(BytesIO(file_bytes))
@@ -50,32 +51,32 @@ async def make_qa_from_para(para):
         return None
 
     
-    response = await model.generate_content(f'''
-    Given a Pagagraph make one Question and answer based on that paragraph.
-    The question should be objective with only one answer.
-    the answer should be one to three word.
-    
-    input para: {para}    
+    response = await model.generate_content(f"""
+        Given a Paragraph make one Question and answer based on that paragraph.
+        The question should be objective with only one answer.
+        The answer should be one to three words.
+        
+        input para: {para}    
 
-    output format:
-    ---
-    {{
-        "question": str,
-        "answer": str
-    }}
-    ---
-    
-    start and end the output with ---
-    ''')
+        output format:
+        ```
+        {{
+            "question": str,
+            "answer": str
+        }}
+        ```
+        
+        Start and end the output with ```
+    """)
     # print(res)
     try:
-        json_str = re.search(r'---\n(.*)\n---', response, re.DOTALL)[1]
-
+        json_str = re.search(r'```\n(.*)\n```', response, re.DOTALL)[1]
+        data = json.loads(json_str)
     except Exception as e:
-        print("unable to decode response\n\n",res, '\n\n')
+        print("unable to decode response\n\n",response, '\n\n')
         raise e
 
-    data = json.loads(json_str)
+    
     data['para'] = para
     return data
 
@@ -83,5 +84,5 @@ async def make_qa_from_para(para):
 async def make_qa_from_all_para(all_para):
     tasks = [make_qa_from_para(para) for para in all_para]
     results = await asyncio.gather(*tasks)
-    return results
+    return [r for r in results if r]
 
