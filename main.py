@@ -22,12 +22,12 @@ async def make_flash_cards(
     doc = Document(doc_name = f.filename, status=RUNNING)
     db.add(doc)
     db.commit()
-    doc.doc_id
-    b.add_task(make_qas,doc,db,f.filename,f.file.read())
+    doc_id = doc.doc_id
+    b.add_task(make_qas,doc_id,db,f.filename,f.file.read())
     return {"message": "success"}
 
-async def make_qas(doc,db,file_name,file_bytes):
-#    db = Session()
+async def make_qas(doc_id,db,file_name,file_bytes):
+
     if file_name.endswith('.pdf'):
         all_para = read_pdf(file_bytes)
         
@@ -37,12 +37,12 @@ async def make_qas(doc,db,file_name,file_bytes):
         raise Exception(f"file: {file.filename} \nFile type not supported. Only PDF files are accepted.")
     QAs = await make_qa_from_all_para(all_para)
     
-    doc_id = doc.doc_id
-    
     for QA in QAs:
         que = Question(doc_id = doc_id, **QA)
         db.add(que)
         db.commit()
+
+    doc = db.query(Document).filter_by(doc_id = doc_id).first()
     doc.status = COMPLETED
     db.commit()
     db.close()
@@ -54,7 +54,13 @@ async def get_questions_by_doc_id(doc_id, db: Session = Depends(get_db)):
     Qs = [r.question for r in results]
     return {"Questions": Qs}
 
-    
+@app.get("/get_doc_status")
+async def get_all_docs(db: Session = Depends(get_db)):
+    results = db.query(Document).all()
+    doc_status = [{"doc_id":r.doc_id,"doc_name":r.doc_name,"status":r.status,} for r in results]
+    return {"doc_status":doc_status}
+
+
 
 
 
